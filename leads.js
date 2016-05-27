@@ -1,12 +1,13 @@
 // JavaScript source code
 var Itanio = Itanio || {};
 
-Itanio.ProxyLogAcesso = (function ($) {
+Itanio.LeadsProxy = (function ($) {
     var $public = {}, $private = {};
 
-    $private.DESENVOLVIMENTO = "Desenvolvimento";
-    $private.HOMOLOGACAO = "Homologacao";
-    $private.PRODUCAO = "Producao";
+    $private.DESENVOLVIMENTO = "desenvolvimento";
+    $private.HOMOLOGACAO = "homologacao";
+    $private.PRODUCAO = "producao";
+    
 
     $(function () {
         $private.Ambiente = $('script[data-ambiente][data-nome="leads.js"]').data("ambiente");
@@ -14,44 +15,92 @@ Itanio.ProxyLogAcesso = (function ($) {
         switch ($private.Ambiente)
         {
             case $private.DESENVOLVIMENTO:
-                $private.API_URL = "http://localhost:3000";
+                $private.API_URL = "http://localhost:3000/api";
                 break;
             case $private.HOMOLOGACAO:
-                $private.API_URL = "http://it_server/Leads";
+                $private.API_URL = "http://it_server/Leads/api";
                 break;
             case $private.PRODUCAO:
-                $private.API_URL = "http://leads.itanio.com.br";
+                $private.API_URL = "http://leads.itanio.com.br/api";
                 break;
         }
     });
-    
+
+    $public.criarVisitante = function (visitante) {
+        return $.ajax({
+            dataType: "json",
+            type: "POST",
+            url: $private.API_URL + "/Visitante",
+            crossDomain: true,
+            data: visitante
+        });
+    };
+
     $public.logarAcesso = function (acesso) {
         return $.ajax({
             dataType: "json",
             type: "POST",
-            url: $private.API_URL + "/Acesso/Logar",
+            url: $private.API_URL + "/Acesso",
             crossDomain: true,
-            data: { acesso: acesso }
+            data: acesso
         });
     };
+
+    $public.obterUrlArquivo = function (idArquivo) {
+        return $.ajax({
+            dataType: "json",
+            type: "GET",
+            url: $private.API_URL + "/Arquivo/" + idArquivo,
+            crossDomain: true,
+        });
+    }
 
     return $public;
 })(jQuery);
 
-Itanio.LogAcesso = (function (proxy) {
+Itanio.Leads = (function (proxy) {
     var $public = {}, $private = {};
+
+    $private.DESENVOLVIMENTO = "desenvolvimento";
+    $private.HOMOLOGACAO = "homologacao";
+    $private.PRODUCAO = "producao";
 
     $(function () {
         $private.IdControleEmail = $('script[data-controle-email][data-nome="leads.js"]').data("controle-email");
         $private.IdControleNome = $('script[data-controle-nome][data-nome="leads.js"]').data("controle-nome");
+        $private.IdControleEnvio = $('script[data-controle-envio][data-nome="leads.js"]').data("controle-envio");
         $private.LinkDownload = $('script[data-controle-download][data-nome="leads.js"]').data("controle-download");
-       
+        $private.IdProjeto = $('script[data-projeto][data-nome="leads.js"]').data("projeto");
+        $private.Ambiente = $('script[data-ambiente][data-nome="leads.js"]').data("ambiente");
+
+        switch ($private.Ambiente) {
+            case $private.DESENVOLVIMENTO:
+                $private.CM_URL = "http://localhost:3001/Arquivo/Index/";
+                break;
+            case $private.HOMOLOGACAO:
+                $private.CM_URL = "http://it_server/Leads/Arquivo/Index/";
+                break;
+            case $private.PRODUCAO:
+                $private.CM_URL = "http://leads.itanio.com.br/Arquivo/Index/";
+                break;
+        }
+
+
+
+        $private.IdArquivo = $private.getQueryString("IdArquivo");
+
         if (!$private.IdControleEmail)
             $private.IdControleEmail = "email";
-        if (!$private.IdControleEmail)
-            $private.IdControleEmail = "nome";
+        if (!$private.IdControleNome)
+            $private.IdControleNome = "nome";
         if (!$private.LinkDownload)
             $private.LinkDownload = "download";
+        if (!$private.IdControleEnvio)
+            $private.IdControleEnvio = "enviar";
+
+        $("#" + $private.IdControleEnvio).on("click", $private.criarVisitante);
+        $("#" + $private.LinkDownload).on("click", $private.logarDownload);
+        $(document).on("click", ".download-conteudo", $public.rastrear);
     });
 
     $private.CHAVE_ID_USUARIO = "Itanio.LogAcesso.IdUsuario";
@@ -84,17 +133,17 @@ Itanio.LogAcesso = (function (proxy) {
         return "";
     };
 
-    $private.gerarSecaoGUID = function() {
+    $private.gerarSecaoGUID = function () {
         return Math.floor((1 + Math.random()) * 0x10000)
           .toString(16)
           .substring(1);
-    }
+    };
 
     $private.gerarGUID = function () {
-     
-        return $private.gerarSecaoGUID() + $private.gerarSecaoGUID() + '-' + $private.gerarSecaoGUID() + '-' + s$private.gerarSecaoGUID() + '-' +
+
+        return $private.gerarSecaoGUID() + $private.gerarSecaoGUID() + '-' + $private.gerarSecaoGUID() + '-' + $private.gerarSecaoGUID() + '-' +
           $private.gerarSecaoGUID() + '-' + $private.gerarSecaoGUID() + $private.gerarSecaoGUID() + $private.gerarSecaoGUID();
-    }
+    };
 
     $private.obterIdUsuarioCorrente = function () {
         var guid = $private.obterCookie($private.CHAVE_ID_USUARIO);
@@ -151,7 +200,7 @@ Itanio.LogAcesso = (function (proxy) {
         var acessoViewModel = {
             url: window.location.href,
             guid: $private.obterIdUsuarioCorrente(),
-            email: $("#" + $private.IdControleEmail).val(),
+            email: $private.obterEmail(),
             nome: $("#" + $privateIdControleNome).val(),
             tipo: $private.obterTipoNavegador(),
             nomeArquivo : $(this).attr("href")
@@ -159,22 +208,109 @@ Itanio.LogAcesso = (function (proxy) {
         proxy.logarAcesso(acesso).fail($private.logarErro);
     };
 
-    $public.rastrear = function () {
+
+    $private.obterEmail = function () {
+
+        var email = $("#" + $private.IdControleEmail).val();
+        if (!email)
+        {
+            email = $private.getQueryString("Email");
+        }
+
+        return email;
+    };
+
+    $public.rastrear = function (e) {
+        
+        var url = window.location.href;
+        if ($(this).hasClass("download-conteudo"))
+        {
+            e.preventDefault();
+            url = $(this).attr("href");
+            $private.urlRedirect = url;
+        }
         var acessoViewModel = {
-            url: window.location.href,
+            url: url,
             guid: $private.obterIdUsuarioCorrente(),
-            email: $("#" + $private.IdControleEmail).val(),
-            nome: $("#" + $privateIdControleNome).val(),
-            tipo: $private.obterTipoNavegador(),
-
+            email: $private.obterEmail(),
+            tipoNavegador: $private.obterTipoNavegador(),
+            userAgentInfo: navigator.userAgent,
+            idProjeto: $private.IdProjeto,
+            idArquivo: $private.IdArquivo
         };
-        proxy.logarAcesso(acesso).fail($private.logarErro);
+       
+        proxy.logarAcesso(acessoViewModel).fail($private.logarErro)
+        .success($private.baixarArquivo);
 
-        $("#" + $private.LinkDownload).on("click", $private.logarDownload);
+    };
+
+    $private.baixarArquivo = function () {
+        if ($private.urlRedirect)
+        {
+            var temp = $private.urlRedirect;
+            $private.urlRedirect = undefined;
+            window.location.href = temp;
+        }
+
+       
+    };
+
+    $private.criarVisitante = function () {
+        var visitanteViewModel = {
+            email: $private.obterEmail(),
+            nome: $("#" + $private.IdControleNome).val(),
+            guid: $private.obterIdUsuarioCorrente(),
+            idProjeto: $private.IdProjeto,
+            idArquivo: $private.IdArquivo
+        };
+
+        proxy.criarVisitante(visitanteViewModel)
+            .fail($private.logarErro)
+            .success($private.redirecionarPaginaEmailEnviado);
+    };
+
+    $private.redirecionarPaginaEmailEnviado = function () {
+        var destino = $private.updateQueryString("EmailEnviado.html", "IdArquivo", $private.IdArquivo);
+        destino = $private.updateQueryString(destino, "Email", $("#" + $private.IdControleEmail).val())
+        window.location.href = destino;
+    };
+
+    $public.exibirBotaoDownload = function (cssClass, texto) {
+        $private.cssClass = cssClass;
+        $private.texto = texto;
+        $private.gerarLink($private.CM_URL + $private.IdArquivo + "?guid=" + $private.obterIdUsuarioCorrente())
+    };
+
+    $private.gerarLink = function (url) {
+        $private.cssClass = $private.cssClass || "";
+        $private.texto = $private.texto || "Baixar";
+        var currentScript = $('script').last();
+        var link = $("<a href='" + url + "' class='download-conteudo " + $private.cssClass + "'>" + $private.texto + "</a>");
+        currentScript.after(link);
+    };
+
+    $private.getQueryString = function(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    };
+
+
+    $private.updateQueryString = function (uri, key, value) {
+        var re = new RegExp("([?|&])" + key + "=.*?(&|$)", "i");
+        separator = uri.indexOf('?') !== -1 ? "&" : "?";
+        if (uri.match(re)) {
+            return uri.replace(re, '$1' + key + "=" + value + '$2');
+        }
+        else {
+            return uri + separator + key + "=" + value;
+        }
     };
 
     return $public;
-})(Itanio.ProxyLogAcesso);
+})(Itanio.LeadsProxy);
 
-
-Itanio.LogAcesso.rastrear();
