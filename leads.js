@@ -284,7 +284,7 @@ Itanio.Leads = (function (proxy) {
     $private.gerarLink = function (url) {
         $private.cssClass = $private.cssClass || "";
         $private.texto = $private.texto || "Baixar";
-        var currentScript = $('script').last();
+        var currentScript = $("script:contains('Itanio.Leads.exibirBotaoDownload(')");
         var link = $("<a href='" + url + "' class='download-conteudo " + $private.cssClass + "'>" + $private.texto + "</a>");
         currentScript.after(link);
     };
