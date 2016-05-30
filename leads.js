@@ -78,7 +78,7 @@ Itanio.Leads = (function (proxy) {
                 $private.CM_URL = "http://localhost:3001/Arquivo/Index/";
                 break;
             case $private.HOMOLOGACAO:
-                $private.CM_URL = "http://it_server/Leads/Arquivo/Index/";
+                $private.CM_URL = "http://it_server:8081/Arquivo/Index/";
                 break;
             case $private.PRODUCAO:
                 $private.CM_URL = "http://leads.itanio.com.br/Arquivo/Index/";
