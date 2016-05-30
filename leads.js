@@ -18,7 +18,7 @@ Itanio.LeadsProxy = (function ($) {
                 $private.API_URL = "http://localhost:3000/api";
                 break;
             case $private.HOMOLOGACAO:
-                $private.API_URL = "http://it_server/Leads/api";
+                $private.API_URL = "http://it_server:8081/api";
                 break;
             case $private.PRODUCAO:
                 $private.API_URL = "http://leads.itanio.com.br/api";
