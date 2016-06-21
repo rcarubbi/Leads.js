@@ -1,4 +1,4 @@
-// JavaScript source code
+﻿// JavaScript source code
 var Itanio = Itanio || {};
 
 Itanio.LeadsProxy = (function ($) {
@@ -11,7 +11,7 @@ Itanio.LeadsProxy = (function ($) {
 
     $(function () {
         $private.Ambiente = $('script[data-ambiente][data-nome="leads.js"]').data("ambiente");
-     
+        
         switch ($private.Ambiente)
         {
             case $private.DESENVOLVIMENTO:
@@ -65,7 +65,16 @@ Itanio.Leads = (function (proxy) {
     $private.HOMOLOGACAO = "homologacao";
     $private.PRODUCAO = "producao";
 
+    $private.addScript = function(src, callback) {
+        var s = document.createElement('script');
+        s.setAttribute('src', src);
+        s.onload = callback;
+        document.body.appendChild(s);
+    };
+
     $(function () {
+        
+ 
         $private.IdControleEmail = $('script[data-controle-email][data-nome="leads.js"]').data("controle-email");
         $private.IdControleNome = $('script[data-controle-nome][data-nome="leads.js"]').data("controle-nome");
         $private.IdControleEnvio = $('script[data-controle-envio][data-nome="leads.js"]').data("controle-envio");
@@ -75,18 +84,27 @@ Itanio.Leads = (function (proxy) {
 
         switch ($private.Ambiente) {
             case $private.DESENVOLVIMENTO:
+                $private.CM_IMG_LOADING = "http://localhost:3001/Content/images/loading.gif";
                 $private.CM_URL = "http://localhost:3001/Arquivo/Index/";
                 break;
             case $private.HOMOLOGACAO:
+                $private.CM_IMG_LOADING = "http://it_server:8081/Content/images/loading.gif";
                 $private.CM_URL = "http://it_server:8081/Arquivo/Index/";
                 break;
             case $private.PRODUCAO:
                 $private.CM_URL = "http://leads.itanio.com.br/Arquivo/Index/";
+                $private.CM_IMG_LOADING = "http://leads.itanio.com.br//Content/images/loading.gif";
                 break;
         }
 
+        $("body").append($("<div id='loading' style='display:none;'><img src='" + $private.CM_IMG_LOADING + "' width='45px' height='45px' /></div>"));
 
-
+        $private.addScript("https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js", function () {
+            $.blockUI.defaults.message = $('#loading');
+            $.blockUI.defaults.css.border = "0px solid #fff";
+            $.blockUI.defaults.css.backgroundColor = 'transparent';
+            $(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
+        });
         $private.IdArquivo = $private.getQueryString("IdArquivo");
 
         if (!$private.IdControleEmail)
@@ -269,6 +287,27 @@ Itanio.Leads = (function (proxy) {
             idProjeto: $private.IdProjeto,
             idArquivo: $private.IdArquivo
         };
+
+        //Express�o regular que valida os campos de e-mail
+        re = /^[\w-]+(\.[\w-]+)*@(([A-Za-z\d][A-Za-z\d-]{0,61}[A-Za-z\d]\.)+[A-Za-z]{2,6}|\[\d{1,3}(\.\d{1,3}){3}\])$/
+
+        var erro = 0;
+        var msg = "";
+        if (re.test(visitanteViewModel.email) == 0)
+        {
+            msg += " - E-mail Inválido\n";
+            erro = 1;
+        }
+
+        if (visitanteViewModel.nome.replace(/ /g, "").length == 0) {
+            msg += " - Nome Inválido\n";
+            erro = 1;
+        }
+
+        if (erro == 1) {
+            alert(msg);
+            return;
+        }
 
         proxy.criarVisitante(visitanteViewModel)
             .fail($private.logarErro)
