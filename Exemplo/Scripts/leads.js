@@ -245,9 +245,8 @@ Itanio.Leads = (function (proxy) {
     };
 
     $private.verificarAlteracaoGuid = function (data, textStatus, jqXHR) {
-        if (jqXHR.getResponseHeader("newGuid").length > 0)
-        {
-            $private.criarCookie($private.CHAVE_ID_USUARIO, jqXHR.getResponseHeader("newGuid"));
+        if (data.Guid != $private.obterCookie($private.CHAVE_ID_USUARIO)) {
+            $private.criarCookie($private.CHAVE_ID_USUARIO, data.Guid);
         }
     };
 
@@ -273,10 +272,13 @@ Itanio.Leads = (function (proxy) {
 
         proxy.criarVisitante(visitanteViewModel)
             .fail($private.logarErro)
-            .success($private.redirecionarPaginaEmailEnviado);
+            .done($private.redirecionarPaginaEmailEnviado);
     };
 
-    $private.redirecionarPaginaEmailEnviado = function () {
+    $private.redirecionarPaginaEmailEnviado = function (data, textStatus, jqXHR) {
+        if (data.Guid != $private.obterCookie($private.CHAVE_ID_USUARIO)) {
+            $private.criarCookie($private.CHAVE_ID_USUARIO, data.Guid);
+        }
         var destino = $private.updateQueryString("EmailEnviado.html", "IdArquivo", $private.IdArquivo);
         destino = $private.updateQueryString(destino, "Email", $("#" + $private.IdControleEmail).val())
         window.location.href = destino;
