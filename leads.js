@@ -245,7 +245,7 @@ Itanio.Leads = (function (proxy) {
     };
 
     $private.verificarAlteracaoGuid = function (data, textStatus, jqXHR) {
-        if (jqXHR.getResponseHeader("newGuid").length > 0)
+        if (jqXHR.getResponseHeader("newGuid"))
         {
             $private.criarCookie($private.CHAVE_ID_USUARIO, jqXHR.getResponseHeader("newGuid"));
         }

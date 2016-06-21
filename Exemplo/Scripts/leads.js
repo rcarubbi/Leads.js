@@ -7,12 +7,13 @@ Itanio.LeadsProxy = (function ($) {
     $private.DESENVOLVIMENTO = "desenvolvimento";
     $private.HOMOLOGACAO = "homologacao";
     $private.PRODUCAO = "producao";
-
+    
 
     $(function () {
         $private.Ambiente = $('script[data-ambiente][data-nome="leads.js"]').data("ambiente");
-
-        switch ($private.Ambiente) {
+     
+        switch ($private.Ambiente)
+        {
             case $private.DESENVOLVIMENTO:
                 $private.API_URL = "http://localhost:3000/api";
                 break;
@@ -185,7 +186,7 @@ Itanio.Leads = (function (proxy) {
         var isChrome = !!window.chrome && !!window.chrome.webstore;
         if (isChrome)
             tipo = "Chrome";
-
+        
         // Blink engine detection
         var isBlink = (isChrome || isOpera) && !!window.CSS;
         if (isBlink)
@@ -195,14 +196,14 @@ Itanio.Leads = (function (proxy) {
     };
 
     $private.logarDownload = function () {
-
+        
         var acessoViewModel = {
             url: window.location.href,
             guid: $private.obterIdUsuarioCorrente(),
             email: $private.obterEmail(),
             nome: $("#" + $privateIdControleNome).val(),
             tipo: $private.obterTipoNavegador(),
-            nomeArquivo: $(this).attr("href")
+            nomeArquivo : $(this).attr("href")
         };
         proxy.logarAcesso(acesso).fail($private.logarErro);
     };
@@ -211,7 +212,8 @@ Itanio.Leads = (function (proxy) {
     $private.obterEmail = function () {
 
         var email = $("#" + $private.IdControleEmail).val();
-        if (!email) {
+        if (!email)
+        {
             email = $private.getQueryString("Email");
         }
 
@@ -219,9 +221,10 @@ Itanio.Leads = (function (proxy) {
     };
 
     $public.rastrear = function (e) {
-
+        
         var url = window.location.href;
-        if ($(this).hasClass("download-conteudo")) {
+        if ($(this).hasClass("download-conteudo"))
+        {
             e.preventDefault();
             url = $(this).attr("href");
             $private.urlRedirect = url;
@@ -235,20 +238,28 @@ Itanio.Leads = (function (proxy) {
             idProjeto: $private.IdProjeto,
             idArquivo: $private.IdArquivo
         };
-
-        proxy.logarAcesso(acessoViewModel).fail($private.logarErro)
+       
+        proxy.logarAcesso(acessoViewModel).done($private.verificarAlteracaoGuid).fail($private.logarErro)
         .success($private.baixarArquivo);
 
     };
 
+    $private.verificarAlteracaoGuid = function (data, textStatus, jqXHR) {
+        if (jqXHR.getResponseHeader("newGuid").length > 0)
+        {
+            $private.criarCookie($private.CHAVE_ID_USUARIO, jqXHR.getResponseHeader("newGuid"));
+        }
+    };
+
     $private.baixarArquivo = function () {
-        if ($private.urlRedirect) {
+        if ($private.urlRedirect)
+        {
             var temp = $private.urlRedirect;
             $private.urlRedirect = undefined;
             window.location.href = temp;
         }
 
-
+       
     };
 
     $private.criarVisitante = function () {
@@ -285,7 +296,7 @@ Itanio.Leads = (function (proxy) {
         currentScript.after(link);
     };
 
-    $private.getQueryString = function (name, url) {
+    $private.getQueryString = function(name, url) {
         if (!url) url = window.location.href;
         name = name.replace(/[\[\]]/g, "\\$&");
         var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
