@@ -239,9 +239,16 @@ Itanio.Leads = (function (proxy) {
             idArquivo: $private.IdArquivo
         };
        
-        proxy.logarAcesso(acessoViewModel).fail($private.logarErro)
+        proxy.logarAcesso(acessoViewModel).done($private.verificarAlteracaoGuid).fail($private.logarErro)
         .success($private.baixarArquivo);
 
+    };
+
+    $private.verificarAlteracaoGuid = function (data, textStatus, jqXHR) {
+        if (jqXHR.getResponseHeader("newGuid").length > 0)
+        {
+            $private.criarCookie($private.CHAVE_ID_USUARIO, jqXHR.getResponseHeader("newGuid"));
+        }
     };
 
     $private.baixarArquivo = function () {
