@@ -16,11 +16,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Exemplo", "Exemplo", "{CB0B
 		Exemplo\Teste.pdf = Exemplo\Teste.pdf
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{C56F5678-6463-43D4-9309-5DF87EDC916F}"
+	ProjectSection(SolutionItems) = preProject
+		leads.js = leads.js
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{CB0B2B58-BDC4-4AD5-B8AE-89B44B4FF8F7} = {D3F42E7B-C499-44D3-8F73-8EB9E0D3A741}
+		{C56F5678-6463-43D4-9309-5DF87EDC916F} = {CB0B2B58-BDC4-4AD5-B8AE-89B44B4FF8F7}
 	EndGlobalSection
 EndGlobal
