@@ -5,10 +5,11 @@ Itanio.LeadsProxy = (function ($) {
     var $public = {}, $private = {};
 
     $private.DESENVOLVIMENTO = "desenvolvimento";
+
     $private.HOMOLOGACAO = "homologacao";
+
     $private.PRODUCAO = "producao";
     
-
     $(function () {
         $private.Ambiente = $('script[data-ambiente][data-nome="leads.js"]').data("ambiente");
         
@@ -71,7 +72,9 @@ Itanio.Leads = (function (proxy) {
     var $public = {}, $private = {};
 
     $private.DESENVOLVIMENTO = "desenvolvimento";
+
     $private.HOMOLOGACAO = "homologacao";
+
     $private.PRODUCAO = "producao";
 
     $private.addScript = function(src, callback) {
@@ -134,6 +137,7 @@ Itanio.Leads = (function (proxy) {
 
     $private.logarErro = function (xhr, textStatus, errorThrown) {
         console.log("Erro no leads.js: " + errorThrown);
+        
     };
 
     $private.obterTipoNavegador = function () {
@@ -204,6 +208,8 @@ Itanio.Leads = (function (proxy) {
         if (data.Guid != $private.obterCookie($private.CHAVE_ID_USUARIO)) {
             $private.criarCookie($private.CHAVE_ID_USUARIO, data.Guid);
         }
+
+        $private.baixarArquivo();
     };
 
     $private.baixarArquivo = function () {
@@ -218,41 +224,45 @@ Itanio.Leads = (function (proxy) {
     };
 
     $private.criarVisitante = function () {
-        $private.obterEmail(function(visitante) {
             var visitanteViewModel = {
-                email: visitante.Email,
+                email:$("#" + $private.IdControleEmail).val(),
                 nome: $("#" + $private.IdControleNome).val(),
                 guid: $private.obterIdUsuarioCorrente(),
                 idProjeto: $private.IdProjeto,
                 idArquivo: $private.IdArquivo
             };
 
-            //Expressão regular que valida os campos de e-mail
-            re = /^[\w-]+(\.[\w-]+)*@(([A-Za-z\d][A-Za-z\d-]{0,61}[A-Za-z\d]\.)+[A-Za-z]{2,6}|\[\d{1,3}(\.\d{1,3}){3}\])$/
-
-            var erro = 0;
-            var msg = "";
-            if (re.test(visitanteViewModel.email) == 0)
-            {
-                msg += "<li style='margin-bottom: 10px;font-size: 16px;'>E-mail Inválido</li>";
-                erro = 1;
+            if ($private.validarFormulario(visitanteViewModel)) {
+                proxy.criarVisitante(visitanteViewModel)
+                    .fail($private.logarErro)
+                    .done($private.redirecionarPaginaEmailEnviado);
             }
-
-            if (visitanteViewModel.nome.replace(/ /g, "").length == 0) {
-                msg += "<li style='margin-bottom: 10px;font-size: 16px;'>Nome Inválido</li>";
-                erro = 1;
-            }
-
-            if (erro == 1) {
-                $private.exibirMensagem("<ul>" + msg + "</ul>", "Atenção");
-                return;
-            }
-
-            proxy.criarVisitante(visitanteViewModel)
-                .fail($private.logarErro)
-                .done($private.redirecionarPaginaEmailEnviado);
-        });
     };
+
+    $private.validarFormulario = function (visitanteViewModel) {
+        //Expressão regular que valida os campos de e-mail
+        re = /^[\w-]+(\.[\w-]+)*@(([A-Za-z\d][A-Za-z\d-]{0,61}[A-Za-z\d]\.)+[A-Za-z]{2,6}|\[\d{1,3}(\.\d{1,3}){3}\])$/
+
+        var erro = 0;
+        var msg = "";
+
+        if (re.test($("#" + $private.IdControleEmail).val()) == 0) {
+            msg += "<li style='margin-bottom: 10px;font-size: 16px;'>E-mail Inválido</li>";
+            erro = 1;
+        }
+
+        if (visitanteViewModel.nome.replace(/ /g, "").length == 0) {
+            msg += "<li style='margin-bottom: 10px;font-size: 16px;'>Nome Inválido</li>";
+            erro = 1;
+        }
+
+        if (erro == 1) {
+            $private.exibirMensagem("<ul>" + msg + "</ul>", "Atenção");
+            return false;
+        }
+
+        return true;
+    }
 
     $private.redirecionarPaginaEmailEnviado = function (data, textStatus, jqXHR) {
         if (data.Guid != $private.obterCookie($private.CHAVE_ID_USUARIO)) {
@@ -312,8 +322,8 @@ Itanio.Leads = (function (proxy) {
 
             proxy.logarAcesso(acessoViewModel)
                 .done($private.verificarAlteracaoGuid)
-                .fail($private.logarErro)
-                .success($private.baixarArquivo);
+                .fail($private.logarErro);
+                 
         }, function () {
             var acessoViewModel = {
                 url: url,
@@ -325,6 +335,7 @@ Itanio.Leads = (function (proxy) {
             };
 
             proxy.logarAcesso(acessoViewModel)
+                .done($private.baixarArquivo)
                 .fail($private.logarErro);
         });
     };
@@ -392,5 +403,6 @@ Itanio.Leads = (function (proxy) {
     });
 
     return $public;
+
 })(Itanio.LeadsProxy);
 
