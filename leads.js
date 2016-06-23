@@ -356,8 +356,8 @@ Itanio.Leads = (function (proxy) {
 
         switch ($private.Ambiente) {
             case $private.DESENVOLVIMENTO:
-                $private.CM_IMG_LOADING = "http://localhost:3001/Content/images/loading.gif";
-                $private.CM_URL = "http://localhost:3001/Arquivo/Index/";
+                $private.CM_IMG_LOADING = "http://localhost:3000/Content/images/loading.gif";
+                $private.CM_URL = "http://localhost:3000/Arquivo/Index/";
                 break;
             case $private.HOMOLOGACAO:
                 $private.CM_IMG_LOADING = "http://it_server:8081/Content/images/loading.gif";
