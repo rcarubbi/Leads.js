@@ -9,12 +9,11 @@ Itanio.LeadsProxy = (function ($) {
     $private.HOMOLOGACAO = "homologacao";
 
     $private.PRODUCAO = "producao";
-    
+
     $(function () {
         $private.Ambiente = $('script[data-ambiente][data-nome="leads.js"]').data("ambiente");
-        
-        switch ($private.Ambiente)
-        {
+
+        switch ($private.Ambiente) {
             case $private.DESENVOLVIMENTO:
                 $private.API_URL = "http://localhost:3000/api";
                 break;
@@ -36,6 +35,17 @@ Itanio.LeadsProxy = (function ($) {
             data: visitante
         });
     };
+
+    $public.criarContato = function (contato) {
+        return $.ajax({
+            dataType: "json",
+            type: "POST",
+            url: $private.API_URL + "/Visitante/CriarContato",
+            crossDomain: true,
+            data: contato
+        });
+    };
+
 
     $public.logarAcesso = function (acesso) {
         return $.ajax({
@@ -77,13 +87,13 @@ Itanio.Leads = (function (proxy) {
 
     $private.PRODUCAO = "producao";
 
-    $private.addScript = function(src, callback) {
+    $private.addScript = function (src, callback) {
         var s = document.createElement('script');
         s.setAttribute('src', src);
         s.onload = callback;
         document.body.appendChild(s);
     };
-    
+
     $private.CHAVE_ID_USUARIO = "Itanio.LogAcesso.IdUsuario";
 
     $private.criarCookie = function (nome, valor, dias) {
@@ -130,14 +140,14 @@ Itanio.Leads = (function (proxy) {
         var guid = $private.obterCookie($private.CHAVE_ID_USUARIO);
         if (guid === "") {
             guid = $private.gerarGUID();
-            $private.criarCookie($private.CHAVE_ID_USUARIO, guid, 365*10);
+            $private.criarCookie($private.CHAVE_ID_USUARIO, guid, 365 * 10);
         }
         return guid;
     };
 
     $private.logarErro = function (xhr, textStatus, errorThrown) {
         console.log("Erro no leads.js: " + errorThrown);
-        
+
     };
 
     $private.obterTipoNavegador = function () {
@@ -168,7 +178,7 @@ Itanio.Leads = (function (proxy) {
         var isChrome = !!window.chrome && !!window.chrome.webstore;
         if (isChrome)
             tipo = "Chrome";
-        
+
         // Blink engine detection
         var isBlink = (isChrome || isOpera) && !!window.CSS;
         if (isBlink)
@@ -178,19 +188,19 @@ Itanio.Leads = (function (proxy) {
     };
 
     $private.logarDownload = function () {
-        $private.obterEmail(function(visitante){
+        $private.obterEmail(function (visitante) {
             var acessoViewModel = {
                 url: window.location.href,
                 guid: $private.obterIdUsuarioCorrente(),
                 email: visitante.Email,
                 nome: $("#" + $privateIdControleNome).val(),
                 tipo: $private.obterTipoNavegador(),
-                nomeArquivo : $(this).attr("href")
+                nomeArquivo: $(this).attr("href")
             };
             proxy.logarAcesso(acesso).fail($private.logarErro);
         });
     };
-    
+
     $private.obterEmail = function (successCallback, notFoundCallback) {
 
         var email = $("#" + $private.IdControleEmail).val();
@@ -213,30 +223,29 @@ Itanio.Leads = (function (proxy) {
     };
 
     $private.baixarArquivo = function () {
-        if ($private.urlRedirect)
-        {
+        if ($private.urlRedirect) {
             var temp = $private.urlRedirect;
             $private.urlRedirect = undefined;
             window.location.href = temp;
         }
 
-       
+
     };
 
     $private.criarVisitante = function () {
-            var visitanteViewModel = {
-                email:$("#" + $private.IdControleEmail).val(),
-                nome: $("#" + $private.IdControleNome).val(),
-                guid: $private.obterIdUsuarioCorrente(),
-                idProjeto: $private.IdProjeto,
-                idArquivo: $private.IdArquivo
-            };
+        var visitanteViewModel = {
+            email: $("#" + $private.IdControleEmail).val(),
+            nome: $("#" + $private.IdControleNome).val(),
+            guid: $private.obterIdUsuarioCorrente(),
+            idProjeto: $private.IdProjeto,
+            idArquivo: $private.IdArquivo
+        };
 
-            if ($private.validarFormulario(visitanteViewModel)) {
-                proxy.criarVisitante(visitanteViewModel)
-                    .fail($private.logarErro)
-                    .done($private.redirecionarPaginaEmailEnviado);
-            }
+        if ($private.validarFormulario(visitanteViewModel)) {
+            proxy.criarVisitante(visitanteViewModel)
+                .fail($private.logarErro)
+                .done($private.redirecionarPaginaEmailEnviado);
+        }
     };
 
     $private.validarFormulario = function (visitanteViewModel) {
@@ -280,7 +289,7 @@ Itanio.Leads = (function (proxy) {
         currentScript.after(link);
     };
 
-    $private.getQueryString = function(name, url) {
+    $private.getQueryString = function (name, url) {
         if (!url) url = window.location.href;
         name = name.replace(/[\[\]]/g, "\\$&");
         var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
@@ -289,7 +298,7 @@ Itanio.Leads = (function (proxy) {
         if (!results[2]) return '';
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     };
-    
+
     $private.updateQueryString = function (uri, key, value) {
         var re = new RegExp("([?|&])" + key + "=.*?(&|$)", "i");
         separator = uri.indexOf('?') !== -1 ? "&" : "?";
@@ -309,7 +318,7 @@ Itanio.Leads = (function (proxy) {
             $private.urlRedirect = url;
         }
 
-        $private.obterEmail(function(visitante){
+        $private.obterEmail(function (visitante) {
             var acessoViewModel = {
                 url: url,
                 guid: $private.obterIdUsuarioCorrente(),
@@ -323,7 +332,7 @@ Itanio.Leads = (function (proxy) {
             proxy.logarAcesso(acessoViewModel)
                 .done($private.verificarAlteracaoGuid)
                 .fail($private.logarErro);
-                 
+
         }, function () {
             var acessoViewModel = {
                 url: url,
@@ -347,12 +356,15 @@ Itanio.Leads = (function (proxy) {
     };
 
     $(function () {
-        $private.IdControleEmail = $('script[data-controle-email][data-nome="leads.js"]').data("controle-email");
-        $private.IdControleNome = $('script[data-controle-nome][data-nome="leads.js"]').data("controle-nome");
-        $private.IdControleEnvio = $('script[data-controle-envio][data-nome="leads.js"]').data("controle-envio");
-        $private.LinkDownload = $('script[data-controle-download][data-nome="leads.js"]').data("controle-download");
-        $private.IdProjeto = $('script[data-projeto][data-nome="leads.js"]').data("projeto");
-        $private.Ambiente = $('script[data-ambiente][data-nome="leads.js"]').data("ambiente");
+        $private.IdControleEmail = $('script[data-nome="leads.js"]').data("controle-email");
+        $private.IdControleEmailContato = $('script[data-nome="leads.js"]').data("controle-email-contato");
+        $private.IdControleCriarContato = $('script[data-nome="leads.js"]').data("controle-criar-contato");
+        $private.IdControleNome = $('script[data-nome="leads.js"]').data("controle-nome");
+        $private.IdControleEnvio = $('script[data-nome="leads.js"]').data("controle-envio");
+
+        $private.LinkDownload = $('script[data-nome="leads.js"]').data("controle-download");
+        $private.IdProjeto = $('script[data-nome="leads.js"]').data("projeto");
+        $private.Ambiente = $('script[data-nome="leads.js"]').data("ambiente");
 
         switch ($private.Ambiente) {
             case $private.DESENVOLVIMENTO:
@@ -386,6 +398,23 @@ Itanio.Leads = (function (proxy) {
             $('#leadsModalWindow').modal();
         };
 
+        $private.criarContato = function (e) {
+            e.preventDefault();
+            var contato = {
+                email: $("#" + $private.IdControleEmailContato).val(),
+                url: window.location.href,
+                guid: $private.obterIdUsuarioCorrente(),
+                tipoNavegador: $private.obterTipoNavegador(),
+                userAgentInfo: navigator.userAgent,
+                idProjeto: $private.IdProjeto
+            };
+            proxy.criarContato(contato).done($private.contatoCriado);
+        };
+
+        $private.contatoCriado = function (data) {
+            $("body").trigger("leads.contatoCriado");
+        };
+
         $private.IdArquivo = $private.getQueryString("IdArquivo");
 
         if (!$private.IdControleEmail)
@@ -399,6 +428,11 @@ Itanio.Leads = (function (proxy) {
 
         $("#" + $private.IdControleEnvio).on("click", $private.criarVisitante);
         $("#" + $private.LinkDownload).on("click", $private.logarDownload);
+
+        if ($private.IdControleEmailContato && $private.IdControleCriarContato) {
+            $("#" + $private.IdControleCriarContato).on("click", $private.criarContato);
+        }
+
         $(document).on("click", ".download-conteudo", $public.rastrear);
     });
 
