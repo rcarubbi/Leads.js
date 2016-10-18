@@ -66,6 +66,15 @@ Itanio.LeadsProxy = (function ($) {
         });
     }
 
+    $public.obterDescricaoArquivo = function (idArquivo) {
+        return $.ajax({
+            dataType: "json",
+            type: "GET",
+            url: $private.API_URL + "/Arquivo/GetDescricao?Id=" + idArquivo,
+            crossDomain: true,
+        });
+    }
+
     $public.obterVisitante = function (idVisitante) {
         return $.ajax({
             dataType: "json",
@@ -282,7 +291,7 @@ Itanio.Leads = (function (proxy) {
         if (data.Guid != $private.obterCookie($private.CHAVE_ID_USUARIO)) {
             $private.criarCookie($private.CHAVE_ID_USUARIO, data.Guid, 365 * 10);
         }
-        var destino = $private.updateQueryString("EmailEnviado.html", "IdArquivo", $private.IdArquivo);
+        var destino = $private.updateQueryString($private.EmailEnviadoUrl, "IdArquivo", $private.IdArquivo);
         window.location.href = destino;
     };
 
@@ -366,7 +375,7 @@ Itanio.Leads = (function (proxy) {
         $private.IdControleCriarContato = $('script[data-nome="leads.js"]').data("controle-criar-contato");
         $private.IdControleNome = $('script[data-nome="leads.js"]').data("controle-nome");
         $private.IdControleEnvio = $('script[data-nome="leads.js"]').data("controle-envio");
-
+        $private.EmailEnviadoUrl = $('script[data-nome="leads.js"]').data("email-enviado-url") || "EmailEnviado.html";
         $private.LinkDownload = $('script[data-nome="leads.js"]').data("controle-download");
         $private.IdProjeto = $('script[data-nome="leads.js"]').data("projeto");
         $private.Ambiente = $('script[data-nome="leads.js"]').data("ambiente");
@@ -448,6 +457,10 @@ Itanio.Leads = (function (proxy) {
         };
 
         $private.IdArquivo = $private.getQueryString("IdArquivo");
+        proxy.obterDescricaoArquivo($private.IdArquivo).done(function (data) {
+            $(".leads-descricao-arquivo").html(data);
+        });
+
 
         if (!$private.IdControleEmail)
             $private.IdControleEmail = "email";
@@ -460,6 +473,8 @@ Itanio.Leads = (function (proxy) {
 
         $("#" + $private.IdControleEnvio).on("click", $private.criarVisitante);
         $("#" + $private.LinkDownload).on("click", $private.logarDownload);
+
+
 
         if ($private.IdControleEmailContato && $private.IdControleCriarContato) {
             $("#" + $private.IdControleCriarContato).on("click", $private.criarContato);
